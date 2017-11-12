@@ -12,16 +12,17 @@ from main.neuralNetworks.cnn import CNN as Encoder
 from main.neuralNetworks.rnn import StackedRNN as Decoder
 from main.neuralNetworks.rnn import RNNUtils as DecoderUtils
 
+
 from matplotlib import pyplot as plt
 from multiprocessing import Process
 
 
 def getNextBatch(batchId, rawCaptions, cocoHelper, rnnOptions, vocab, word2ind):
     # training.batch_sequences_with_states()
-    embeddingSize = min(rnnOptions.batch_size, len(rawCaptions))
-    batchData = np.zeros(shape=(rnnOptions.time_step, len(vocab), rnnOptions.batch_size))
+    batchInstanceCount = min(rnnOptions.batch_size, len(rawCaptions))
+    batchData = np.zeros(shape=(rnnOptions.time_step, cocoHelper.word2vec.layer1_size, rnnOptions.batch_size))
     batchImgs = []
-    for i in range(embeddingSize):
+    for i in range(batchInstanceCount):
         embeddedCaptionInst, instImgFileName = getNextInstance(i + batchId, rawCaptions, cocoHelper,
                                                                rnnOptions.rnn_utils, vocab, word2ind=word2ind)
         batchData[0:embeddedCaptionInst.shape[0], :, i] = embeddedCaptionInst[0:rnnOptions.time_step]
@@ -32,7 +33,7 @@ def getNextBatch(batchId, rawCaptions, cocoHelper, rnnOptions, vocab, word2ind):
 def getNextInstance(iteration, data, cocoHelper, rnnUtils, vocab, word2ind):
     # training.batch_sequences_with_states()
     dataInst = data[iteration % len(data)]
-    embeddedCaption = rnnUtils.embed_inst_to_vocab(dataInst=dataInst, vocab=vocab, word2ind=word2ind)
+    embeddedCaption = rnnUtils.embed_inst_to_vocab(dataInst=dataInst, cocoHelper=cocoHelper)
     return embeddedCaption, [cocoHelper.imgs[i] for i in cocoHelper.imgs][iteration % len(data)]['file_name']
 
 
@@ -59,7 +60,8 @@ def start():
     cnn = createEncoder(data_dir)
 
     print("creating decoder's structure and initialization")
-    rnn, rnnOptions = createAndInitializeDecoder(captionsDict, imageFeaturesSize, rnnUtils)
+    rnn, rnnOptions = createAndInitializeDecoder(captionsDict, imageFeaturesSize, rnnUtils,
+                                                 word_embedding_size=cocoHelper.word2vec.layer1_size)
 
     printGraph(rnnOptions)
 
@@ -173,8 +175,9 @@ def printGraph(rnnOptions):
     writer.add_graph(rnnOptions.session.graph)
 
 
-def createAndInitializeDecoder(captionsDict, imageFeaturesSize, rnnUtils):
-    rnnOptions = DecoderUtils.RNNOptions(vocab=captionsDict, rnnUtils=rnnUtils, image_feature_size=imageFeaturesSize)
+def createAndInitializeDecoder(captionsDict, imageFeaturesSize, rnnUtils, word_embedding_size):
+    rnnOptions = DecoderUtils.RNNOptions(vocab=captionsDict, rnnUtils=rnnUtils, image_feature_size=imageFeaturesSize,
+                                         word_embedding_size=word_embedding_size)
     rnn = Decoder.StackedRNN(input_size=rnnOptions.input_size, lstm_size=rnnOptions.lstm_size,
                              number_of_layers=rnnOptions.num_layers, output_size=rnnOptions.out_size,
                              session=rnnOptions.session, learning_rate=rnnOptions.learning_rate, name=rnnOptions.name)

@@ -6,6 +6,7 @@ class StackedRNN:
     def __init__(self, input_size, lstm_size, number_of_layers, output_size, session, learning_rate, name="rnn"):
         self.scope = name
         self.input_size = input_size
+        print("input size:", input_size)
         self.lstm_size = lstm_size
         self.number_of_layers = number_of_layers
         self.output_size = output_size

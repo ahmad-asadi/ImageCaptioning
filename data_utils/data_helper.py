@@ -50,6 +50,7 @@ import numpy as np
 from skimage.draw import polygon
 import copy
 import re
+from gensim.models.word2vec import Word2Vec
 
 
 class COCOHelper:
@@ -67,6 +68,8 @@ class COCOHelper:
         self.catToImgs = {}
         self.imgs = []
         self.cats = []
+        self.word2vec = None
+        self.word2vec_vocab = None
         if annotation_file is not None:
             print('loading annotations into memory...')
             time_t = datetime.datetime.utcnow()
@@ -74,6 +77,8 @@ class COCOHelper:
             print(datetime.datetime.utcnow() - time_t)
             self.dataset = dataset
             self.createIndex()
+
+        self.create_word2vec()
 
     def createIndex(self):
         # create index
@@ -430,3 +435,12 @@ class COCOHelper:
         captionsDictWordToInd = {captionsDictList[ind]: ind for ind in range(len(captionsDictList))}
         captionsDictIndToWord = {ind: captionsDictList[ind] for ind in range(len(captionsDictList))}
         return rawCaptions, captionsDictList, captionsDictIndToWord, captionsDictWordToInd
+
+    def create_word2vec(self):
+        print("creating word embeddings structure")
+        sentences = [re.split("[\W .,?!\"\'/\\\]+", (self.anns[i]["caption"]).lower()) for i in self.anns]
+        iteration_count = 10
+        self.word2vec = Word2Vec(iter=iteration_count, min_count=0, size=1000, workers=8)
+        self.word2vec_vocab = self.word2vec.build_vocab(sentences=sentences)
+        print("training word embeddings")
+        self.word2vec.train(sentences=sentences, total_examples=len(sentences), epochs=iteration_count)

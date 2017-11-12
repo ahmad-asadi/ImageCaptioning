@@ -2,6 +2,8 @@ import tensorflow as tf
 import numpy as np
 import re
 
+from gensim.models.word2vec import Word2Vec
+
 
 class RNNUtils:
     @staticmethod
@@ -17,21 +19,19 @@ class RNNUtils:
         return data
 
     @staticmethod
-    def embed_inst_to_vocab(dataInst, vocab, word2ind):
+    def embed_inst_to_vocab(dataInst, cocoHelper):
         current_caption_words = re.split("[\W .,?!\"\'/\\\]+", dataInst['caption'])
-        data = np.zeros(shape=(len(current_caption_words),  len(vocab)))
+        data = np.zeros(shape=(len(current_caption_words), cocoHelper.word2vec.layer1_size))
         cnt = 0
         for s in current_caption_words:
-            v = [0.0] * len(vocab)
-            v[word2ind[s.lower()]] = 1.0
-            data[cnt, :] = v
+            data[cnt, :] = cocoHelper.word2vec[s.lower()]
             cnt += 1
         return data
 
     @staticmethod
     def embed_to_vocab(data_, vocab, sentenceSize, word2Ind):
         print("creating word embedding, expected embedding size: " + repr(len(data_)) + " * " + repr(len(vocab)))
-        data = np.zeros(shape=(len(data_),  sentenceSize, len(vocab)))
+        data = np.zeros(shape=(len(data_), sentenceSize, len(vocab)))
         rawCaptionId = 0
         for rawCaption in data_:
             captionWordList = re.split("[\W .,?!\"\'/\\\]+", rawCaption['caption'])
@@ -61,11 +61,11 @@ class RNNUtils:
 
 
 class RNNOptions:
-    def __init__(self, vocab, rnnUtils, image_feature_size):
+    def __init__(self, vocab, rnnUtils, image_feature_size, word_embedding_size):
         self.image_feature_size = image_feature_size
         self.num_layers = 5
-        self.vocab_size = len(vocab)
-        self.input_size = self.vocab_size + self.image_feature_size
+        self.word_embedding_size = word_embedding_size
+        self.input_size = self.word_embedding_size + self.image_feature_size
         self.out_size = len(vocab)
         self.lstm_size = 512
         self.batch_size = 512
