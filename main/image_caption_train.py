@@ -6,12 +6,12 @@ import time
 import resource
 import math
 import copy
+import re
 
 from data_utils import data_helper
 from main.neuralNetworks.cnn import CNN as Encoder
 from main.neuralNetworks.rnn import StackedRNN as Decoder
 from main.neuralNetworks.rnn import RNNUtils as DecoderUtils
-
 
 from matplotlib import pyplot as plt
 from multiprocessing import Process
@@ -21,20 +21,26 @@ def getNextBatch(batchId, rawCaptions, cocoHelper, rnnOptions, vocab, word2ind):
     # training.batch_sequences_with_states()
     batchInstanceCount = min(rnnOptions.batch_size, len(rawCaptions))
     batchData = np.zeros(shape=(rnnOptions.time_step, cocoHelper.word2vec.layer1_size, rnnOptions.batch_size))
+    batchLabel = np.zeros(shape=(rnnOptions.time_step, len(vocab), rnnOptions.batch_size))
     batchImgs = []
-    for i in range(batchInstanceCount):
-        embeddedCaptionInst, instImgFileName = getNextInstance(i + batchId, rawCaptions, cocoHelper,
-                                                               rnnOptions.rnn_utils, vocab, word2ind=word2ind)
-        batchData[0:embeddedCaptionInst.shape[0], :, i] = embeddedCaptionInst[0:rnnOptions.time_step]
+    for i in range(batchInstanceCount-1):
+        embeddedCaptionInst, instImgFileName, embeddedLabel = getNextInstance(i + batchId, rawCaptions, cocoHelper,
+                                                                              rnnOptions.rnn_utils, vocab,
+                                                                              word2ind=word2ind)
+        batchData[1:embeddedCaptionInst.shape[0], :, i] = embeddedCaptionInst[0:min(rnnOptions.time_step,
+                                                                                    embeddedCaptionInst.shape[0])-1]
+        batchLabel[0:embeddedCaptionInst.shape[0], :, i] = embeddedLabel[0:rnnOptions.time_step]
         batchImgs.append(instImgFileName)
-    return batchData, batchImgs
+    return batchData, batchImgs, batchLabel
 
 
 def getNextInstance(iteration, data, cocoHelper, rnnUtils, vocab, word2ind):
     # training.batch_sequences_with_states()
     dataInst = data[iteration % len(data)]
     embeddedCaption = rnnUtils.embed_inst_to_vocab(dataInst=dataInst, cocoHelper=cocoHelper)
-    return embeddedCaption, [cocoHelper.imgs[i] for i in cocoHelper.imgs][iteration % len(data)]['file_name']
+    embeddedLabel = rnnUtils.embed_inst_label_to_vocab(dataInst=dataInst, vocab=vocab, word2ind=word2ind)
+    return embeddedCaption, [cocoHelper.imgs[i] for i in cocoHelper.imgs][iteration % len(data)]['file_name'], \
+           embeddedLabel
 
 
 def start():
@@ -66,11 +72,12 @@ def start():
     printGraph(rnnOptions)
 
     extractNextBatch(0, capWord2Ind, captionsDict, cocoHelper, rawCaptions, rnnOptions)
-    batchData = copy.copy(batchDataTmp)
-    batchImgFileName = list(batchImgFileNameTmp)
+    batchData = copy.copy(batch_data_buffer)
+    batchImgFileName = list(batch_img_filename_buffer)
+    batchLabelRaw = copy.copy(batch_label_buffer)
     batchInput = np.zeros(shape=(batchData.shape[2], batchData.shape[0],
                                  batchData.shape[1] + imageFeaturesSize))
-    batchLabel = np.zeros(shape=(batchData.shape[2], batchData.shape[0], batchData.shape[1]))
+    batchLabel = np.zeros(shape=(batchLabelRaw.shape[2], batchLabelRaw.shape[0], batchLabelRaw.shape[1]))
     for batchCnt in range(len(batchImgFileName)):
         imageFeatures = cnn.classify(os.path.join(data_dir, "train2014/" + batchImgFileName[batchCnt]))
 
@@ -78,8 +85,8 @@ def start():
                                       (rnnOptions.image_feature_size, rnnOptions.time_step))
         batchInput[batchCnt, :, :] = (np.concatenate((batchData[:, :, batchCnt].transpose(), imageFeaturesMat),
                                                      axis=0)).transpose()
-        batchLabel[batchCnt, 0:batchLabel.shape[1] - 1, :] = [batchData[i + 1, :, batchCnt] for i in
-                                                              range(batchData.shape[0] - 1)]
+        batchLabel[batchCnt, 0:batchLabel.shape[1] - 1, :] = [batchLabelRaw[i + 1, :, batchCnt] for i in
+                                                              range(batchLabelRaw.shape[0] - 1)]
     testInput = batchInput[0, :, :]
 
     print("starting to train the structure")
@@ -96,8 +103,9 @@ def start():
                   100 * internal_loop_counter / math.ceil(len(rawCaptions) / rnnOptions.batch_size),
                   "%")
 
-            batchData = copy.copy(batchDataTmp)
-            batchImgFileName = list(batchImgFileNameTmp)
+            batchData = copy.copy(batch_data_buffer)
+            batchImgFileName = list(batch_img_filename_buffer)
+            batchLabelRaw = copy.copy(batch_label_buffer)
 
             load_data_process = Process(target=extractNextBatch, args=(batchId, capWord2Ind, captionsDict,
                                                                        cocoHelper, rawCaptions, rnnOptions))
@@ -105,7 +113,7 @@ def start():
 
             prepare_data_and_train_structure(batchData=batchData, i=i, batchImgFileName=batchImgFileName, cnn=cnn,
                                              data_dir=data_dir, imageFeaturesSize=imageFeaturesSize, rnn=rnn,
-                                             rnnOptions=rnnOptions)
+                                             rnnOptions=rnnOptions, batchLabelRaw=batchLabelRaw)
             load_data_process.join()
             batchId += 1
 
@@ -123,15 +131,15 @@ def start():
             print("saving current model...")
             rnnOptions.saver.save(rnnOptions.session, rnnOptions.saved_model_path)
             print("testing current model:")
-            testModel(captionsDict, rnn, rnnOptions, testInput)
+            testModel(captionsDict, rnn, rnnOptions, testInput, cocoHelper)
 
 
 def prepare_data_and_train_structure(batchData, i, batchImgFileName, cnn, data_dir, imageFeaturesSize, rnn,
-                                     rnnOptions):
+                                     rnnOptions, batchLabelRaw):
     global costs
     batchInput = np.zeros(shape=(batchData.shape[2], batchData.shape[0],
                                  batchData.shape[1] + imageFeaturesSize))
-    batchLabel = np.zeros(shape=(batchData.shape[2], batchData.shape[0], batchData.shape[1]))
+    batchLabel = np.zeros(shape=(batchLabelRaw.shape[2], batchLabelRaw.shape[0], batchLabelRaw.shape[1]))
     for batchCnt in range(len(batchImgFileName)):
         imageFeatures = cnn.classify(os.path.join(data_dir, "train2014/" + batchImgFileName[batchCnt]))
 
@@ -139,8 +147,8 @@ def prepare_data_and_train_structure(batchData, i, batchImgFileName, cnn, data_d
                                       (rnnOptions.image_feature_size, rnnOptions.time_step))
         batchInput[batchCnt, :, :] = (np.concatenate((batchData[:, :, batchCnt].transpose(), imageFeaturesMat),
                                                      axis=0)).transpose()
-        batchLabel[batchCnt, 0:batchLabel.shape[1] - 1, :] = [batchData[i + 1, :, batchCnt] for i in
-                                                              range(batchData.shape[0] - 1)]
+        batchLabel[batchCnt, 0:batchLabel.shape[1] - 1, :] = [batchLabelRaw[i + 1, :, batchCnt] for i in
+                                                              range(batchLabelRaw.shape[0] - 1)]
     costs[i] = rnn.train_batch(Xbatch=batchInput, Ybatch=batchLabel)
 
 
@@ -149,21 +157,28 @@ def train_structure(batchInput, batchLabel, rnn):
 
 
 def extractNextBatch(batchId, capWord2Ind, captionsDict, cocoHelper, rawCaptions, rnnOptions):
-    global batchDataTmp, batchImgFileNameTmp
-    batchDataTmp, batchImgFileNameTmp = getNextBatch(batchId=batchId, rawCaptions=rawCaptions, cocoHelper=cocoHelper,
-                                                     rnnOptions=rnnOptions, vocab=captionsDict, word2ind=capWord2Ind)
+    global batch_data_buffer, batch_img_filename_buffer, batch_label_buffer
+    batch_data_buffer, batch_img_filename_buffer, batch_label_buffer = getNextBatch(batchId=batchId,
+                                                                                    rawCaptions=rawCaptions,
+                                                                                    cocoHelper=cocoHelper,
+                                                                                    rnnOptions=rnnOptions,
+                                                                                    vocab=captionsDict,
+                                                                                    word2ind=capWord2Ind)
 
 
-def testModel(captionsDict, rnn, rnnOptions, testInput):
+def testModel(captionsDict, rnn, rnnOptions, testInput, cocoHelper):
     gen_str = ""
     out = rnn.run_step(X=testInput, init_zero_state=True)
-    for testInd in range(rnnOptions.time_step):
+    for testInd in range(rnnOptions.time_step-1):
         # noinspection PyUnboundLocalVariable
         element = np.random.choice(range(len(captionsDict)),
                                    p=out)  # Sample character from the network according to the generated output
         # probabilities
 
-        gen_str += " " + captionsDict[element]
+        new_word = captionsDict[element]
+        gen_str += " " + new_word
+        testInput[testInd+1, 0:cocoHelper.word2vec.layer1_size] = cocoHelper.word2vec[re.split("[\W .,?!\"\'/\\\]+",
+                                                                                               new_word)[0]]
 
         out = rnn.run_step(X=testInput, init_zero_state=False)
     print(gen_str)

@@ -29,6 +29,18 @@ class RNNUtils:
         return data
 
     @staticmethod
+    def embed_inst_label_to_vocab(dataInst, vocab, word2ind):
+        current_caption_words = re.split("[\W .,?!\"\'/\\\]+", dataInst['caption'])
+        data = np.zeros(shape=(len(current_caption_words), len(vocab)))
+        cnt = 0
+        for s in current_caption_words:
+            v = [0.0] * len(vocab)
+            v[word2ind[s.lower()]] = 1.0
+            data[cnt, :] = v
+            cnt += 1
+        return data
+
+    @staticmethod
     def embed_to_vocab(data_, vocab, sentenceSize, word2Ind):
         print("creating word embedding, expected embedding size: " + repr(len(data_)) + " * " + repr(len(vocab)))
         data = np.zeros(shape=(len(data_), sentenceSize, len(vocab)))
