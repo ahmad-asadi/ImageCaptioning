@@ -83,7 +83,7 @@ class RNNOptions:
         self.batch_size = 512
         self.time_step = 25
         # self.learning_rate = 0.003
-        self.learning_rate = 0.0001
+        self.learning_rate = 0.001
         self.saved_model_path = "./image_caption_encoder_saved/model.ckpt"
         self.name = "Decoder"
         self.test_prefix_string = "Romeo: "

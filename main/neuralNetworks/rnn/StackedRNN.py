@@ -24,18 +24,22 @@ class StackedRNN:
                                                           shape=(None, self.number_of_layers * 2 * self.lstm_size),
                                                           name="lstm_init_value")
 
+                with tf.variable_scope(name_or_scope="DropOutParams"):
+                    self.keep_prob = tf.placeholder(dtype=tf.float32)
+
                 with tf.name_scope(name="RNN_Core"):
-                    self.lstm_cells = [tf.contrib.rnn.BasicLSTMCell(self.lstm_size, forget_bias=1.0, state_is_tuple=False)
+                    self.lstm_cells = [tf.contrib.rnn.BasicLSTMCell(self.lstm_size, forget_bias=1.0,
+                                                                    state_is_tuple=False)
                                        for _
                                        in range(self.number_of_layers)]
+                    self.lstm_cells = [tf.nn.rnn_cell.DropoutWrapper(self.lstm_cells[i],
+                                                                     output_keep_prob=self.keep_prob)
+                                       for i in range(self.number_of_layers)]
                     self.lstm = tf.contrib.rnn.MultiRNNCell(self.lstm_cells, state_is_tuple=False)
+                    self.lstm = tf.nn.rnn_cell.DropoutWrapper(self.lstm, output_keep_prob=self.keep_prob)
                     self.outputs, self.lstm_current_state = tf.nn.dynamic_rnn(cell=self.lstm, inputs=self.X,
                                                                               initial_state=self.lstm_init_value,
                                                                               dtype=tf.float32)
-
-                # with tf.name_scope(name="DropOut"):
-                #     self.keep_prob = tf.placeholder(tf.float32)
-                #     self.lstm_current_state = tf.nn.dropout(self.lstm_current_state, self.keep_prob)
 
                 with tf.variable_scope(name_or_scope="Output"):
                     self.OUT_W = tf.Variable(initial_value=tf.random_normal(shape=(self.lstm_size, self.output_size),
@@ -57,33 +61,38 @@ class StackedRNN:
 
                     self.cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=self.net_out,
                                                                                        labels=self.Y_long))
+                    # self.cost = tf.reduce_sum(tf.nn.softmax_cross_entropy_with_logits(logits=self.net_out,
+                    #                                                                   labels=self.Y_long))
 
                     # self.train_op = tf.train.RMSPropOptimizer(self.learning_rate, decay=0.9).minimize(self.cost)
                     self.train_op = tf.train.AdamOptimizer(learning_rate=self.learning_rate).minimize(self.cost)
         self.print_number_of_parameters()
 
-    def run_step(self, X, init_zero_state=True):
+    def run_step(self, X, init_zero_state=True, keep_prob=1):
         if init_zero_state:
             init_value = np.zeros(shape=(self.number_of_layers * 2 * self.lstm_size,))
         else:
             init_value = self.lstm_last_state
 
         out, next_lstm_state = self.session.run([self.final_output, self.lstm_current_state],
-                                                feed_dict={self.X: [X], self.lstm_init_value: [init_value]})
+                                                feed_dict={self.X: [X], self.lstm_init_value: [init_value],
+                                                           self.keep_prob: keep_prob})
 
         self.lstm_last_state = next_lstm_state[0]
 
         return out[0][0]
 
-    def train_batch(self, Xbatch, Ybatch):
+    def train_batch(self, Xbatch, Ybatch, keep_prob=1):
         init_value = np.zeros(shape=(Xbatch.shape[0], self.number_of_layers * 2 * self.lstm_size))
 
         cost, _ = self.session.run([self.cost, self.train_op], feed_dict={self.X: Xbatch, self.Y: Ybatch,
-                                                                          self.lstm_init_value: init_value})
+                                                                          self.lstm_init_value: init_value,
+                                                                          self.keep_prob: keep_prob})
 
         return cost
 
-    def print_number_of_parameters(self):
+    @staticmethod
+    def print_number_of_parameters():
         total_parameters = 0
         for variable in tf.trainable_variables():
             # shape is an array of tf.Dimension
