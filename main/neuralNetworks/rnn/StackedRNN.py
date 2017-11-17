@@ -61,8 +61,6 @@ class StackedRNN:
 
                     self.cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=self.net_out,
                                                                                        labels=self.Y_long))
-                    # self.cost = tf.reduce_sum(tf.nn.softmax_cross_entropy_with_logits(logits=self.net_out,
-                    #                                                                   labels=self.Y_long))
 
                     # self.train_op = tf.train.RMSPropOptimizer(self.learning_rate, decay=0.9).minimize(self.cost)
                     self.train_op = tf.train.AdamOptimizer(learning_rate=self.learning_rate).minimize(self.cost)
@@ -80,7 +78,7 @@ class StackedRNN:
 
         self.lstm_last_state = next_lstm_state[0]
 
-        return out[0][0]
+        return out[0]
 
     def train_batch(self, Xbatch, Ybatch, keep_prob=1):
         init_value = np.zeros(shape=(Xbatch.shape[0], self.number_of_layers * 2 * self.lstm_size))

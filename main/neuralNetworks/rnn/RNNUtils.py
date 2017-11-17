@@ -20,7 +20,7 @@ class RNNUtils:
 
     @staticmethod
     def embed_inst_to_vocab(dataInst, cocoHelper):
-        current_caption_words = re.split("[\W .,?!\"\'/\\\]+", dataInst['caption'])
+        current_caption_words = re.split("[\W]+", dataInst['caption'])
         data = np.zeros(shape=(len(current_caption_words), cocoHelper.word2vec.layer1_size))
         cnt = 0
         for s in current_caption_words:
@@ -30,7 +30,7 @@ class RNNUtils:
 
     @staticmethod
     def embed_inst_label_to_vocab(dataInst, vocab, word2ind):
-        current_caption_words = re.split("[\W .,?!\"\'/\\\]+", dataInst['caption'])
+        current_caption_words = re.split("[\W]+", dataInst['caption'])
         data = np.zeros(shape=(len(current_caption_words), len(vocab)))
         cnt = 0
         for s in current_caption_words:
@@ -46,7 +46,7 @@ class RNNUtils:
         data = np.zeros(shape=(len(data_), sentenceSize, len(vocab)))
         rawCaptionId = 0
         for rawCaption in data_:
-            captionWordList = re.split("[\W .,?!\"\'/\\\]+", rawCaption['caption'])
+            captionWordList = re.split("[\W]+", rawCaption['caption'])
             for wordInd in range(min(len(captionWordList), sentenceSize)):
                 wordEmbedding = np.zeros(shape=(len(vocab)))
 
@@ -75,7 +75,7 @@ class RNNUtils:
 class RNNOptions:
     def __init__(self, vocab, rnnUtils, image_feature_size, word_embedding_size):
         self.image_feature_size = image_feature_size
-        self.num_layers = 5
+        self.num_layers = 3
         self.word_embedding_size = word_embedding_size
         self.input_size = self.word_embedding_size + self.image_feature_size
         self.out_size = len(vocab)
@@ -83,7 +83,7 @@ class RNNOptions:
         self.batch_size = 512
         self.time_step = 25
         # self.learning_rate = 0.003
-        self.learning_rate = 0.001
+        self.learning_rate = 0.01
         self.saved_model_path = "./image_caption_encoder_saved/model.ckpt"
         self.name = "Decoder"
         self.test_prefix_string = "Romeo: "

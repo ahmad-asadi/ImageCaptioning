@@ -409,17 +409,17 @@ class COCOHelper:
 
     def extract_captions(self):
         print("creating captions word dictionary...")
-        rawCaptions = [self.anns[record] for record in self.anns if record < 2000]
+        rawCaptions = [self.anns[record] for record in self.anns if record < 100]
         # rawCaptions = [self.anns[record] for record in self.anns]
         captionsDict = set()
-        captionsDict.add(".")
-        captionsDict.add(",")
-        captionsDict.add("?")
-        captionsDict.add("!")
-        captionsDict.add("\"")
-        captionsDict.add("\'")
-        captionsDict.add("\\")
-        captionsDict.add("/")
+        # captionsDict.add(".")
+        # captionsDict.add(",")
+        # captionsDict.add("?")
+        # captionsDict.add("!")
+        # captionsDict.add("\"")
+        # captionsDict.add("\'")
+        # captionsDict.add("\\")
+        # captionsDict.add("/")
         cnt = 0
 
         for rawCaption in rawCaptions:
@@ -427,18 +427,18 @@ class COCOHelper:
                 print("analysis of caption " + repr(cnt) + " out of " + repr(rawCaptions.__len__()))
             cnt += 1
             # noinspection PyTypeChecker
-            splittedWords = re.split("[\W .,?!\"\'/\\\]+", rawCaption['caption'])
+            splittedWords = re.split("[\W]+", rawCaption['caption'])
             for word in splittedWords:
                 captionsDict.add(word.lower())
         print("captions word dictionary is created.")
         captionsDictList = sorted(captionsDict)
         captionsDictWordToInd = {captionsDictList[ind]: ind for ind in range(len(captionsDictList))}
         captionsDictIndToWord = {ind: captionsDictList[ind] for ind in range(len(captionsDictList))}
-        return rawCaptions, captionsDictList, captionsDictIndToWord, captionsDictWordToInd
+        return rawCaptions, captionsDictList, captionsDictIndToWord, captionsDictWordToInd, captionsDictIndToWord
 
     def create_word2vec(self):
         print("creating word embeddings structure")
-        sentences = [re.split("[\W .,?!\"\'/\\\]+", (self.anns[i]["caption"]).lower()) for i in self.anns]
+        sentences = [re.split("[\W]+", (self.anns[i]["caption"]).lower()) for i in self.anns]
         iteration_count = 10
         self.word2vec = Word2Vec(iter=iteration_count, min_count=0, size=1000, workers=8)
         self.word2vec_vocab = self.word2vec.build_vocab(sentences=sentences)

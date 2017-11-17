@@ -60,7 +60,7 @@ def start():
 
     print("loading dataset")
     # cocoHelper, captionsDict, embeddedCaptions = loadDataset(data_dir, rnnUtils)
-    cocoHelper, captionsDict, rawCaptions, capWord2Ind = loadDataset(data_dir, rnnUtils)
+    cocoHelper, captionsDict, rawCaptions, capWord2Ind, capInd2Word = loadDataset(data_dir, rnnUtils)
 
     print("creating encoder's structure")
     cnn = createEncoder(data_dir)
@@ -131,7 +131,7 @@ def start():
             print("saving current model...")
             rnnOptions.saver.save(rnnOptions.session, rnnOptions.saved_model_path)
             print("testing current model:")
-            testModel(captionsDict, rnn, rnnOptions, testInput, cocoHelper)
+            testModel(rnn, rnnOptions, testInput, cocoHelper, capInd2Word)
 
 
 def prepare_data_and_train_structure(batchData, i, batchImgFileName, cnn, data_dir, imageFeaturesSize, rnn,
@@ -149,7 +149,8 @@ def prepare_data_and_train_structure(batchData, i, batchImgFileName, cnn, data_d
                                                      axis=0)).transpose()
         batchLabel[batchCnt, 0:batchLabel.shape[1] - 1, :] = [batchLabelRaw[i + 1, :, batchCnt] for i in
                                                               range(batchLabelRaw.shape[0] - 1)]
-    costs[i] = rnn.train_batch(Xbatch=batchInput, Ybatch=batchLabel, keep_prob=0.8)
+
+    costs[i] = rnn.train_batch(Xbatch=batchInput, Ybatch=batchLabel, keep_prob=0.9)
 
 
 def train_structure(batchInput, batchLabel, rnn):
@@ -166,21 +167,20 @@ def extractNextBatch(batchId, capWord2Ind, captionsDict, cocoHelper, rawCaptions
                                                                                     word2ind=capWord2Ind)
 
 
-def testModel(captionsDict, rnn, rnnOptions, testInput, cocoHelper):
+def testModel(rnn, rnnOptions, testInput, cocoHelper, ind2word):
     gen_str = ""
-    out = rnn.run_step(X=testInput, init_zero_state=True)
+    out = rnn.run_step(X=testInput, init_zero_state=True)[0]
     for testInd in range(rnnOptions.time_step-1):
         # noinspection PyUnboundLocalVariable
-        element = np.random.choice(range(len(captionsDict)),
+        element = np.random.choice(range(len(out)),
                                    p=out)  # Sample character from the network according to the generated output
         # probabilities
 
-        new_word = captionsDict[element]
+        new_word = ind2word[element]
         gen_str += " " + new_word
-        testInput[testInd+1, 0:cocoHelper.word2vec.layer1_size] = cocoHelper.word2vec[re.split("[\W .,?!\"\'/\\\]+",
-                                                                                               new_word)[0]]
+        testInput[testInd+1, 0:cocoHelper.word2vec.layer1_size] = cocoHelper.word2vec[re.split("[\W]+", new_word)[0]]
 
-        out = rnn.run_step(X=testInput, init_zero_state=False)
+        out = rnn.run_step(X=testInput, init_zero_state=False)[testInd+1]
     print(gen_str)
 
 
@@ -208,10 +208,10 @@ def createEncoder(data_dir):
 
 def loadDataset(data_dir, rnnUtils):
     cocoHelper = data_helper.COCOHelper(data_dir + "annotations/captions_train2014.json")
-    rawCaptions, captionsDict, capIndToWord, capWordToInd = cocoHelper.extract_captions()
+    rawCaptions, captionsDict, capIndToWord, capWordToInd, capIndToWord = cocoHelper.extract_captions()
     # embeddedCaptions = rnnUtils.embed_to_vocab(data_=rawCaptions, vocab=captionsDict, sentenceSize=100,
     #                                            word2Ind=capWordToInd)
-    return cocoHelper, captionsDict, rawCaptions, capWordToInd  # , embeddedCaptions
+    return cocoHelper, captionsDict, rawCaptions, capWordToInd, capIndToWord  # , embeddedCaptions
 
 
 def initializeParameters():
