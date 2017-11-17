@@ -47,7 +47,9 @@ class StackedRNN:
                     self.OUT_B = tf.Variable(initial_value=tf.random_normal(shape=(self.output_size,),
                                                                             stddev=0.01, name="output_B"))
                     self.outputs_reshaped = tf.reshape(tensor=self.outputs, shape=[-1, self.lstm_size])
-                    self.net_out = tf.matmul(self.outputs_reshaped, self.OUT_W) + self.OUT_B
+                    self.net_out = tf.nn.batch_normalization(x=tf.matmul(self.outputs_reshaped, self.OUT_W) + self.OUT_B
+                                                             , mean=0, variance=1, offset=0, scale=1,
+                                                             variance_epsilon=1e-10)
 
                     self.batch_time_shape = tf.shape(self.outputs)
                     self.final_output = tf.reshape(tf.nn.softmax(logits=self.net_out), shape=(self.batch_time_shape[0],

@@ -75,7 +75,7 @@ class RNNUtils:
 class RNNOptions:
     def __init__(self, vocab, rnnUtils, image_feature_size, word_embedding_size):
         self.image_feature_size = image_feature_size
-        self.num_layers = 3
+        self.num_layers = 5
         self.word_embedding_size = word_embedding_size
         self.input_size = self.word_embedding_size + self.image_feature_size
         self.out_size = len(vocab)
@@ -83,7 +83,7 @@ class RNNOptions:
         self.batch_size = 512
         self.time_step = 25
         # self.learning_rate = 0.003
-        self.learning_rate = 0.01
+        self.learning_rate = 0.001
         self.saved_model_path = "./image_caption_encoder_saved/model.ckpt"
         self.name = "Decoder"
         self.test_prefix_string = "Romeo: "
