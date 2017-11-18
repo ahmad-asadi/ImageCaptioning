@@ -88,12 +88,13 @@ def start():
         batchLabel[batchCnt, 0:batchLabel.shape[1] - 1, :] = [batchLabelRaw[i + 1, :, batchCnt] for i in
                                                               range(batchLabelRaw.shape[0] - 1)]
     testInput = batchInput[0, :, :]
+    print("test image name: ", batchImgFileName[0])
 
     print("starting to train the structure")
     global costs
     startTime = time.time()
     costs = np.zeros(maxIterCount)
-    checkPoint = 5
+    checkPoint = 1
     statShowPeriod = 1
 
     batchId = 0
@@ -180,7 +181,7 @@ def testModel(rnn, rnnOptions, testInput, cocoHelper, ind2word):
         gen_str += " " + new_word
         testInput[testInd+1, 0:cocoHelper.word2vec.layer1_size] = cocoHelper.word2vec[re.split("[\W]+", new_word)[0]]
 
-        out = rnn.run_step(X=testInput, init_zero_state=False)[testInd+1]
+        out = rnn.run_step(X=testInput, init_zero_state=False)[0]
     print(gen_str)
 
 
@@ -195,7 +196,8 @@ def createAndInitializeDecoder(captionsDict, imageFeaturesSize, rnnUtils, word_e
                                          word_embedding_size=word_embedding_size)
     rnn = Decoder.StackedRNN(input_size=rnnOptions.input_size, lstm_size=rnnOptions.lstm_size,
                              number_of_layers=rnnOptions.num_layers, output_size=rnnOptions.out_size,
-                             session=rnnOptions.session, learning_rate=rnnOptions.learning_rate, name=rnnOptions.name)
+                             session=rnnOptions.session, learning_rate=rnnOptions.learning_rate,
+                             batch_size=rnnOptions.batch_size, name=rnnOptions.name)
     rnnOptions.session.run(tf.global_variables_initializer())
     rnnOptions.saver = tf.train.Saver(tf.global_variables())
     return rnn, rnnOptions

@@ -3,9 +3,11 @@ import numpy as np
 
 
 class StackedRNN:
-    def __init__(self, input_size, lstm_size, number_of_layers, output_size, session, learning_rate, name="rnn"):
+    def __init__(self, input_size, lstm_size, number_of_layers, output_size, session, learning_rate, batch_size,
+                 name="rnn"):
         self.scope = name
         self.input_size = input_size
+        self.batch_size = batch_size
         print("input size:", input_size)
         self.lstm_size = lstm_size
         self.number_of_layers = number_of_layers
@@ -20,32 +22,36 @@ class StackedRNN:
             with tf.variable_scope(name_or_scope=self.scope):
                 with tf.variable_scope(name_or_scope="Input"):
                     self.X = tf.placeholder(dtype=tf.float32, shape=(None, None, self.input_size), name="X")
-                    self.lstm_init_value = tf.placeholder(dtype=tf.float32,
-                                                          shape=(None, self.number_of_layers * 2 * self.lstm_size),
-                                                          name="lstm_init_value")
+                    # self.lstm_init_value = tf.placeholder(dtype=tf.float32,
+                    #                                       shape=(None, self.number_of_layers * 2 * self.lstm_size),
+                    #                                       name="lstm_init_value")
 
                 with tf.variable_scope(name_or_scope="DropOutParams"):
                     self.keep_prob = tf.placeholder(dtype=tf.float32)
 
                 with tf.name_scope(name="RNN_Core"):
-                    self.lstm_cells = [tf.contrib.rnn.BasicLSTMCell(self.lstm_size, forget_bias=1.0,
-                                                                    state_is_tuple=False)
+                    self.lstm_cells = [tf.nn.rnn_cell.BasicLSTMCell(self.lstm_size, forget_bias=1.0,
+                                                                    state_is_tuple=True)
                                        for _
                                        in range(self.number_of_layers)]
+
+                    self.lstm_init_states = [self.lstm_cells[i].zero_state(batch_size=self.batch_size, dtype=tf.float32)
+                                             for i in range(len(self.lstm_cells))]
+
                     self.lstm_cells = [tf.nn.rnn_cell.DropoutWrapper(self.lstm_cells[i],
                                                                      output_keep_prob=self.keep_prob)
                                        for i in range(self.number_of_layers)]
-                    self.lstm = tf.contrib.rnn.MultiRNNCell(self.lstm_cells, state_is_tuple=False)
+                    self.lstm = tf.nn.rnn_cell.MultiRNNCell(self.lstm_cells, state_is_tuple=True)
                     self.lstm = tf.nn.rnn_cell.DropoutWrapper(self.lstm, output_keep_prob=self.keep_prob)
                     self.outputs, self.lstm_current_state = tf.nn.dynamic_rnn(cell=self.lstm, inputs=self.X,
-                                                                              initial_state=self.lstm_init_value,
-                                                                              dtype=tf.float32)
+                                                                              dtype=tf.float32, time_major=True)
 
                 with tf.variable_scope(name_or_scope="Output"):
                     self.OUT_W = tf.Variable(initial_value=tf.random_normal(shape=(self.lstm_size, self.output_size),
                                                                             stddev=0.01, name="output_W"))
                     self.OUT_B = tf.Variable(initial_value=tf.random_normal(shape=(self.output_size,),
                                                                             stddev=0.01, name="output_B"))
+
                     self.outputs_reshaped = tf.reshape(tensor=self.outputs, shape=[-1, self.lstm_size])
                     self.net_out = tf.nn.batch_normalization(x=tf.matmul(self.outputs_reshaped, self.OUT_W) + self.OUT_B
                                                              , mean=0, variance=1, offset=0, scale=1,
@@ -75,18 +81,19 @@ class StackedRNN:
             init_value = self.lstm_last_state
 
         out, next_lstm_state = self.session.run([self.final_output, self.lstm_current_state],
-                                                feed_dict={self.X: [X], self.lstm_init_value: [init_value],
+                                                feed_dict={self.X: [X],
+                                                           # self.lstm_init_value: [init_value],
                                                            self.keep_prob: keep_prob})
 
-        self.lstm_last_state = next_lstm_state[0]
+        self.lstm_last_state = next_lstm_state[len(next_lstm_state)-1]
 
-        return out[0]
+        return out[len(out)-1]
 
     def train_batch(self, Xbatch, Ybatch, keep_prob=1):
         init_value = np.zeros(shape=(Xbatch.shape[0], self.number_of_layers * 2 * self.lstm_size))
 
         cost, _ = self.session.run([self.cost, self.train_op], feed_dict={self.X: Xbatch, self.Y: Ybatch,
-                                                                          self.lstm_init_value: init_value,
+                                                                          # self.lstm_init_value: init_value,
                                                                           self.keep_prob: keep_prob})
 
         return cost
