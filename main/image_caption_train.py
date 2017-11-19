@@ -23,12 +23,12 @@ def getNextBatch(batchId, rawCaptions, cocoHelper, rnnOptions, vocab, word2ind):
     batchData = np.zeros(shape=(rnnOptions.time_step, cocoHelper.word2vec.layer1_size, rnnOptions.batch_size))
     batchLabel = np.zeros(shape=(rnnOptions.time_step, len(vocab), rnnOptions.batch_size))
     batchImgs = []
-    for i in range(batchInstanceCount-1):
+    for i in range(batchInstanceCount - 1):
         embeddedCaptionInst, instImgFileName, embeddedLabel = getNextInstance(i + batchId, rawCaptions, cocoHelper,
                                                                               rnnOptions.rnn_utils, vocab,
                                                                               word2ind=word2ind)
         batchData[1:embeddedCaptionInst.shape[0], :, i] = embeddedCaptionInst[0:min(rnnOptions.time_step,
-                                                                                    embeddedCaptionInst.shape[0])-1]
+                                                                                    embeddedCaptionInst.shape[0]) - 1]
         batchLabel[0:embeddedCaptionInst.shape[0], :, i] = embeddedLabel[0:rnnOptions.time_step]
         batchImgs.append(instImgFileName)
     return batchData, batchImgs, batchLabel
@@ -36,14 +36,24 @@ def getNextBatch(batchId, rawCaptions, cocoHelper, rnnOptions, vocab, word2ind):
 
 def getNextInstance(iteration, data, cocoHelper, rnnUtils, vocab, word2ind):
     # training.batch_sequences_with_states()
-    dataInst = data[iteration % len(data)]
+    global testLabel
+
+    inst_image = [cocoHelper.imgs[i] for i in cocoHelper.imgs][iteration % len(data)]
+    inst_image_filename = inst_image["file_name"]
+    dataInsts = [cocoHelper.anns[i] for i in cocoHelper.anns if cocoHelper.anns[i]["image_id"] == inst_image["id"]]
+    dataInst = dataInsts[0]
+
+    if testLabel is None:
+        testLabel = dataInst
     embeddedCaption = rnnUtils.embed_inst_to_vocab(dataInst=dataInst, cocoHelper=cocoHelper)
     embeddedLabel = rnnUtils.embed_inst_label_to_vocab(dataInst=dataInst, vocab=vocab, word2ind=word2ind)
-    return embeddedCaption, [cocoHelper.imgs[i] for i in cocoHelper.imgs][iteration % len(data)]['file_name'], \
-           embeddedLabel
+
+    return embeddedCaption, inst_image_filename, embeddedLabel
 
 
 def start():
+    global testLabel
+    testLabel = None
     rsrc = resource.RLIMIT_DATA
     soft, hard = resource.getrlimit(rsrc)
     print('Soft limit starts as  :', soft)
@@ -169,9 +179,10 @@ def extractNextBatch(batchId, capWord2Ind, captionsDict, cocoHelper, rawCaptions
 
 
 def testModel(rnn, rnnOptions, testInput, cocoHelper, ind2word):
+    global testLabel
     gen_str = ""
     out = rnn.run_step(X=testInput, init_zero_state=True)[0]
-    for testInd in range(rnnOptions.time_step-1):
+    for testInd in range(rnnOptions.time_step - 1):
         # noinspection PyUnboundLocalVariable
         element = np.random.choice(range(len(out)),
                                    p=out)  # Sample character from the network according to the generated output
@@ -179,10 +190,11 @@ def testModel(rnn, rnnOptions, testInput, cocoHelper, ind2word):
 
         new_word = ind2word[element]
         gen_str += " " + new_word
-        testInput[testInd+1, 0:cocoHelper.word2vec.layer1_size] = cocoHelper.word2vec[re.split("[\W]+", new_word)[0]]
+        testInput[testInd + 1, 0:cocoHelper.word2vec.layer1_size] = cocoHelper.word2vec[re.split("[\W]+", new_word)[0]]
 
         out = rnn.run_step(X=testInput, init_zero_state=False)[0]
     print(gen_str)
+    print("Human label: ", testLabel)
 
 
 def printGraph(rnnOptions):

@@ -409,8 +409,8 @@ class COCOHelper:
 
     def extract_captions(self):
         print("creating captions word dictionary...")
-        rawCaptions = [self.anns[record] for record in self.anns if record < 2000]
-        # rawCaptions = [self.anns[record] for record in self.anns]
+        # rawCaptions = [self.anns[record] for record in self.anns if record < 1000]
+        rawCaptions = [self.anns[record] for record in self.anns]
         captionsDict = set()
         # captionsDict.add(".")
         # captionsDict.add(",")

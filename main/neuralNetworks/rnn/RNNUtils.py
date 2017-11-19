@@ -75,11 +75,11 @@ class RNNUtils:
 class RNNOptions:
     def __init__(self, vocab, rnnUtils, image_feature_size, word_embedding_size):
         self.image_feature_size = image_feature_size
-        self.num_layers = 5
+        self.num_layers = 2
         self.word_embedding_size = word_embedding_size
         self.input_size = self.word_embedding_size + self.image_feature_size
         self.out_size = len(vocab)
-        self.lstm_size = 512
+        self.lstm_size = 256
         self.batch_size = 512
         self.time_step = 25
         # self.learning_rate = 0.003
