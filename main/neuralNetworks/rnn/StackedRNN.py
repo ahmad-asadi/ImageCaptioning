@@ -67,8 +67,10 @@ class StackedRNN:
 
                     self.Y_long = tf.reshape(tensor=self.Y, shape=(-1, self.output_size))
 
-                    self.cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=self.net_out,
-                                                                                       labels=self.Y_long))
+                    # self.cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=self.net_out,
+                    #                                                                    labels=self.Y_long))
+                    self.cost = tf.reduce_mean(tf.losses.mean_squared_error(predictions=self.net_out,
+                                                                            labels=self.Y_long))
 
                     # self.train_op = tf.train.RMSPropOptimizer(self.learning_rate, decay=0.9).minimize(self.cost)
                     self.train_op = tf.train.AdamOptimizer(learning_rate=self.learning_rate).minimize(self.cost)

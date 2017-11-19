@@ -109,9 +109,11 @@ def start():
 
     batchId = 0
     for i in range(maxIterCount):
-        for internal_loop_counter in range(math.ceil(len(rawCaptions) / rnnOptions.batch_size)):
+        loop_counter = math.ceil((len(rawCaptions)/5) / rnnOptions.batch_size)
+        loop_counter = min(loop_counter, 10)
+        for internal_loop_counter in range(loop_counter):
             print("iteration:" + repr(i) + ", internal loop: processing ",
-                  100 * internal_loop_counter / math.ceil(len(rawCaptions) / rnnOptions.batch_size),
+                  100 * internal_loop_counter / loop_counter,
                   "%")
 
             batchData = copy.copy(batch_data_buffer)
@@ -161,7 +163,7 @@ def prepare_data_and_train_structure(batchData, i, batchImgFileName, cnn, data_d
         batchLabel[batchCnt, 0:batchLabel.shape[1] - 1, :] = [batchLabelRaw[i + 1, :, batchCnt] for i in
                                                               range(batchLabelRaw.shape[0] - 1)]
 
-    costs[i] = rnn.train_batch(Xbatch=batchInput, Ybatch=batchLabel, keep_prob=0.9)
+    costs[i] = rnn.train_batch(Xbatch=batchInput, Ybatch=batchLabel, keep_prob=1)
 
 
 def train_structure(batchInput, batchLabel, rnn):
