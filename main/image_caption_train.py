@@ -163,7 +163,7 @@ def prepare_data_and_train_structure(batchData, i, batchImgFileName, cnn, data_d
         batchLabel[batchCnt, 0:batchLabel.shape[1] - 1, :] = [batchLabelRaw[i + 1, :, batchCnt] for i in
                                                               range(batchLabelRaw.shape[0] - 1)]
 
-    costs[i] = rnn.train_batch(Xbatch=batchInput, Ybatch=batchLabel, keep_prob=1)
+    costs[i] = rnn.train_batch(Xbatch=batchInput, Ybatch=batchLabel, keep_prob=0.9)
 
 
 def train_structure(batchInput, batchLabel, rnn):
@@ -184,6 +184,7 @@ def testModel(rnn, rnnOptions, testInput, cocoHelper, ind2word):
     global testLabel
     gen_str = ""
     out = rnn.run_step(X=testInput, init_zero_state=True)[0]
+    out = out[0]
     for testInd in range(rnnOptions.time_step - 1):
         # noinspection PyUnboundLocalVariable
         element = np.random.choice(range(len(out)),
@@ -195,6 +196,7 @@ def testModel(rnn, rnnOptions, testInput, cocoHelper, ind2word):
         testInput[testInd + 1, 0:cocoHelper.word2vec.layer1_size] = cocoHelper.word2vec[re.split("[\W]+", new_word)[0]]
 
         out = rnn.run_step(X=testInput, init_zero_state=False)[0]
+        out = out[testInd+1]
     print(gen_str)
     print("Human label: ", testLabel)
 

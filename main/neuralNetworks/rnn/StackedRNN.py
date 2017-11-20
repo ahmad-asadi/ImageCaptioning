@@ -58,19 +58,20 @@ class StackedRNN:
                                                              variance_epsilon=1e-10)
 
                     self.batch_time_shape = tf.shape(self.outputs)
-                    self.final_output = tf.reshape(tf.nn.softmax(logits=self.net_out), shape=(self.batch_time_shape[0],
-                                                                                              self.batch_time_shape[1],
-                                                                                              self.output_size))
+                    self.softmax_net_out = tf.nn.softmax(logits=self.net_out)
+                    self.final_output = tf.reshape(self.softmax_net_out, shape=(self.batch_time_shape[0],
+                                                                                self.batch_time_shape[1],
+                                                                                self.output_size))
 
                     self.Y = tf.placeholder(dtype=tf.float32,
                                             shape=(None, None, self.output_size))
 
                     self.Y_long = tf.reshape(tensor=self.Y, shape=(-1, self.output_size))
 
-                    # self.cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=self.net_out,
-                    #                                                                    labels=self.Y_long))
-                    self.cost = tf.reduce_mean(tf.losses.mean_squared_error(predictions=self.net_out,
-                                                                            labels=self.Y_long))
+                    self.cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=self.softmax_net_out,
+                                                                                       labels=self.Y_long))
+                    # self.cost = tf.reduce_sum(tf.losses.mean_squared_error(predictions=self.softmax_net_out,
+                    #                                                        labels=self.Y_long))
 
                     # self.train_op = tf.train.RMSPropOptimizer(self.learning_rate, decay=0.9).minimize(self.cost)
                     self.train_op = tf.train.AdamOptimizer(learning_rate=self.learning_rate).minimize(self.cost)
@@ -87,9 +88,9 @@ class StackedRNN:
                                                            # self.lstm_init_value: [init_value],
                                                            self.keep_prob: keep_prob})
 
-        self.lstm_last_state = next_lstm_state[len(next_lstm_state)-1]
+        self.lstm_last_state = next_lstm_state[len(next_lstm_state) - 1]
 
-        return out[len(out)-1]
+        return out
 
     def train_batch(self, Xbatch, Ybatch, keep_prob=1):
         init_value = np.zeros(shape=(Xbatch.shape[0], self.number_of_layers * 2 * self.lstm_size))

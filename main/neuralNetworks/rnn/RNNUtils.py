@@ -84,6 +84,7 @@ class RNNOptions:
         self.time_step = 10
         # self.learning_rate = 0.003
         self.learning_rate = 0.001
+        # self.learning_rate = 0.1  # appropriate for MSE loss function
         self.saved_model_path = "./image_caption_encoder_saved/model.ckpt"
         self.name = "Decoder"
         self.test_prefix_string = "Romeo: "
