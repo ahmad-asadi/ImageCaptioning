@@ -20,17 +20,27 @@ from multiprocessing import Process
 def getNextBatch(batchId, rawCaptions, cocoHelper, rnnOptions, vocab, word2ind):
     # training.batch_sequences_with_states()
     batchInstanceCount = min(rnnOptions.batch_size, len(rawCaptions))
-    batchData = np.zeros(shape=(rnnOptions.time_step, cocoHelper.word2vec.layer1_size, rnnOptions.batch_size))
-    batchLabel = np.zeros(shape=(rnnOptions.time_step, len(vocab), rnnOptions.batch_size))
+    batchData = np.zeros(shape=(rnnOptions.time_step, cocoHelper.word2vec.layer1_size, rnnOptions.batch_size*5))
+    batchLabel = np.zeros(shape=(rnnOptions.time_step, len(vocab), rnnOptions.batch_size*5))
     batchImgs = []
     for i in range(batchInstanceCount - 1):
-        embeddedCaptionInst, instImgFileName, embeddedLabel = getNextInstance(i + batchId, rawCaptions, cocoHelper,
-                                                                              rnnOptions.rnn_utils, vocab,
-                                                                              word2ind=word2ind)
-        batchData[1:embeddedCaptionInst.shape[0], :, i] = embeddedCaptionInst[0:min(rnnOptions.time_step,
-                                                                                    embeddedCaptionInst.shape[0]) - 1]
-        batchLabel[0:embeddedCaptionInst.shape[0], :, i] = embeddedLabel[0:rnnOptions.time_step]
-        batchImgs.append(instImgFileName)
+        embeddedCaptionInsts, instImgFileNames, embeddedLabels = getNextInstance(i + batchId, rawCaptions, cocoHelper,
+                                                                                 rnnOptions.rnn_utils, vocab,
+                                                                                 word2ind=word2ind)
+
+        cnt = 0
+        offset = i * 5
+        for embeddedCaptionInst in embeddedCaptionInsts:
+            batchData[1:embeddedCaptionInst.shape[0], :, offset + cnt] = embeddedCaptionInst[0:min(rnnOptions.time_step,
+                                                                                        embeddedCaptionInst.shape[0])-1]
+            cnt += 1
+
+        cnt = 0
+        for embeddedLabel in embeddedLabels:
+            batchLabel[0:embeddedLabel.shape[0], :, offset + cnt] = embeddedLabel[0:rnnOptions.time_step]
+            cnt += 1
+        for instImgFileName in instImgFileNames:
+            batchImgs.append(instImgFileName)
     return batchData, batchImgs, batchLabel
 
 
@@ -39,16 +49,14 @@ def getNextInstance(iteration, data, cocoHelper, rnnUtils, vocab, word2ind):
     global testLabel
 
     inst_image = [cocoHelper.imgs[i] for i in cocoHelper.imgs][iteration % len(data)]
-    inst_image_filename = inst_image["file_name"]
     dataInsts = [cocoHelper.anns[i] for i in cocoHelper.anns if cocoHelper.anns[i]["image_id"] == inst_image["id"]]
-    dataInst = dataInsts[0]
+    embeddedCaptions = [rnnUtils.embed_inst_to_vocab(dataInst=dataInsts[i], cocoHelper=cocoHelper) for i in
+                        range(len(dataInsts))]
+    embeddedLabels = [rnnUtils.embed_inst_label_to_vocab(dataInst=dataInsts[i], vocab=vocab, word2ind=word2ind) for i in
+                      range(len(dataInsts))]
+    inst_image_filenames = [inst_image["file_name"] for _ in range(len(dataInsts))]
 
-    if testLabel is None:
-        testLabel = dataInst
-    embeddedCaption = rnnUtils.embed_inst_to_vocab(dataInst=dataInst, cocoHelper=cocoHelper)
-    embeddedLabel = rnnUtils.embed_inst_label_to_vocab(dataInst=dataInst, vocab=vocab, word2ind=word2ind)
-
-    return embeddedCaption, inst_image_filename, embeddedLabel
+    return embeddedCaptions, inst_image_filenames, embeddedLabels
 
 
 def start():
@@ -109,7 +117,7 @@ def start():
 
     batchId = 0
     for i in range(maxIterCount):
-        loop_counter = math.ceil((len(rawCaptions)/5) / rnnOptions.batch_size)
+        loop_counter = math.ceil((len(rawCaptions) / 5) / rnnOptions.batch_size)
         loop_counter = min(loop_counter, 10)
         for internal_loop_counter in range(loop_counter):
             print("iteration:" + repr(i) + ", internal loop: processing ",
@@ -196,7 +204,7 @@ def testModel(rnn, rnnOptions, testInput, cocoHelper, ind2word):
         testInput[testInd + 1, 0:cocoHelper.word2vec.layer1_size] = cocoHelper.word2vec[re.split("[\W]+", new_word)[0]]
 
         out = rnn.run_step(X=testInput, init_zero_state=False)[0]
-        out = out[testInd+1]
+        out = out[testInd + 1]
     print(gen_str)
     print("Human label: ", testLabel)
 

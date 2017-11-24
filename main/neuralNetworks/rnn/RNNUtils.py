@@ -1,6 +1,7 @@
 import tensorflow as tf
 import numpy as np
 import re
+import math
 
 from gensim.models.word2vec import Word2Vec
 
@@ -79,9 +80,9 @@ class RNNOptions:
         self.word_embedding_size = word_embedding_size
         self.input_size = self.word_embedding_size + self.image_feature_size
         self.out_size = len(vocab)
-        self.lstm_size = 256
-        self.batch_size = 64
-        self.time_step = 10
+        self.lstm_size = 512
+        self.batch_size = math.ceil(64/5)
+        self.time_step = 25
         # self.learning_rate = 0.003
         self.learning_rate = 0.001
         # self.learning_rate = 0.1  # appropriate for MSE loss function
