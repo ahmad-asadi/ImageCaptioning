@@ -108,7 +108,7 @@ def start():
                                                      axis=0)).transpose()
         batchLabel[batchCnt, 0:batchLabel.shape[1] - 1, :] = [batchLabelRaw[i + 1, :, batchCnt] for i in
                                                               range(batchLabelRaw.shape[0] - 1)]
-    testInput = batchInput[0, :, :]
+    testInput = batchInput[:, 0, :]
     print("test image name: ", batchImgFileName[0])
 
     print("starting to train the structure")
@@ -174,6 +174,18 @@ def prepare_data_and_train_structure(batchData, i, batchImgFileName, cnn, data_d
                                                      axis=0)).transpose()
         batchLabel[batchCnt, 0:batchLabel.shape[1] - 1, :] = [batchLabelRaw[i + 1, :, batchCnt] for i in
                                                               range(batchLabelRaw.shape[0] - 1)]
+    # batchInput = np.zeros(shape=(batchData.shape[0], batchData.shape[2],
+    #                              batchData.shape[1] + imageFeaturesSize))
+    # batchLabel = np.zeros(shape=(batchLabelRaw.shape[0], batchLabelRaw.shape[2], batchLabelRaw.shape[1]))
+    # for batchCnt in range(len(batchImgFileName)):
+    #     imageFeatures = cnn.classify(os.path.join(data_dir, "train2014/" + batchImgFileName[batchCnt]))
+    #
+    #     imageFeaturesMat = np.reshape(np.repeat(a=imageFeatures, repeats=rnnOptions.time_step).transpose(),
+    #                                   (rnnOptions.image_feature_size, rnnOptions.time_step))
+    #     batchInput[:, batchCnt, :] = (np.concatenate((batchData[:, :, batchCnt].transpose(), imageFeaturesMat),
+    #                                                  axis=0)).transpose()
+    #     batchLabel[0:batchLabel.shape[0] - 1, batchCnt, :] = [batchLabelRaw[i + 1, :, batchCnt] for i in
+    #                                                           range(batchLabelRaw.shape[0] - 1)]
 
     costs[i] = rnn.train_batch(Xbatch=batchInput, Ybatch=batchLabel, keep_prob=0.9)
 
@@ -207,8 +219,8 @@ def testModel(rnn, rnnOptions, testInput, cocoHelper, ind2word):
         gen_str += " " + new_word
         testInput[testInd + 1, 0:cocoHelper.word2vec.layer1_size] = cocoHelper.word2vec[re.split("[\W]+", new_word)[0]]
 
-        out = rnn.run_step(X=testInput, init_zero_state=False)[0]
-        out = out[testInd + 1]
+        out = rnn.run_step(X=testInput, init_zero_state=False)[testInd + 1]
+        out = out[0]
     print(gen_str)
     print("Human label: ", testLabel)
 
