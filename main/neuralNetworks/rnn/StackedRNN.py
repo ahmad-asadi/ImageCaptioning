@@ -87,7 +87,7 @@ class StackedRNN:
             init_value = self.lstm_last_state
 
         out, next_lstm_state = self.session.run([self.final_output, self.lstm_current_state],
-                                                feed_dict={self.X: [X],
+                                                feed_dict={self.X: X,
                                                            # self.lstm_init_value: [init_value],
                                                            self.keep_prob: keep_prob})
 

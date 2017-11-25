@@ -108,7 +108,8 @@ def start():
                                                      axis=0)).transpose()
         batchLabel[0:batchLabel.shape[0] - 1, batchCnt, :] = [batchLabelRaw[i + 1, :, batchCnt] for i in
                                                               range(batchLabelRaw.shape[0] - 1)]
-    testInput = batchInput[:, 0, :]
+    testInput = np.zeros(shape=(batchInput.shape[0], 1, batchInput.shape[2]))
+    testInput[:, 0, :] = batchInput[:, 0, :]
     print("test image name: ", batchImgFileName[0])
 
     print("starting to train the structure")
@@ -152,7 +153,7 @@ def start():
             plt.show()
             plt.pause(1)
 
-        if i % checkPoint == 0 and i > 0:
+        if i % checkPoint == 0:
             print("saving current model...")
             rnnOptions.saver.save(rnnOptions.session, rnnOptions.saved_model_path)
             print("testing current model:")
@@ -205,7 +206,7 @@ def testModel(rnn, rnnOptions, testInput, cocoHelper, ind2word):
 
         new_word = ind2word[element]
         gen_str += " " + new_word
-        testInput[testInd + 1, 0:cocoHelper.word2vec.layer1_size] = cocoHelper.word2vec[re.split("[\W]+", new_word)[0]]
+        testInput[testInd + 1, 0, 0:cocoHelper.word2vec.layer1_size] = cocoHelper.word2vec[re.split("[\W]+", new_word)[0]]
 
         out = rnn.run_step(X=testInput, init_zero_state=False)[testInd + 1]
         out = out[0]

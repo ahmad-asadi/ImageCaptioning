@@ -13,7 +13,7 @@
     <SUITE FILE_PATH="coverage/ImageClassification$Main.coverage" NAME="Train Coverage Results" MODIFIED="1508171674104" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/main" />
     <SUITE FILE_PATH="coverage/ImageClassification$Train.coverage" NAME="Train Coverage Results" MODIFIED="1509792927582" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/main" />
     <SUITE FILE_PATH="coverage/ImageClassification$ImageCaptioning.coverage" NAME="ImageCaptioning Coverage Results" MODIFIED="1510414406435" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/main" />
-    <SUITE FILE_PATH="coverage/ImageCaptioning$ImageCaptioning.coverage" NAME="ImageCaptioning Coverage Results" MODIFIED="1511626724474" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/main" />
+    <SUITE FILE_PATH="coverage/ImageCaptioning$ImageCaptioning.coverage" NAME="ImageCaptioning Coverage Results" MODIFIED="1511629265841" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/main" />
     <SUITE FILE_PATH="coverage/ImageClassification$test_rnn.coverage" NAME="test rnn Coverage Results" MODIFIED="1509435618633" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/main/neuralNetworks/rnn" />
   </component>
   <component name="CreatePatchCommitExecutor">
@@ -49,11 +49,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="StackedRNN.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="StackedRNN.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/main/neuralNetworks/rnn/StackedRNN.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-64">
-              <caret line="23" column="92" lean-forward="false" selection-start-line="23" selection-start-column="92" selection-end-line="23" selection-end-column="92" />
+            <state relative-caret-position="270">
+              <caret line="90" column="20" lean-forward="false" selection-start-line="90" selection-start-column="20" selection-end-line="90" selection-end-column="20" />
               <folding>
                 <element signature="e#0#23#0" expanded="true" />
               </folding>
@@ -71,11 +71,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="data_helper.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="data_helper.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/data_utils/data_helper.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="226">
-              <caret line="431" column="46" lean-forward="true" selection-start-line="431" selection-start-column="46" selection-end-line="431" selection-end-column="46" />
+            <state relative-caret-position="28">
+              <caret line="432" column="53" lean-forward="true" selection-start-line="432" selection-start-column="53" selection-end-line="432" selection-end-column="53" />
               <folding>
                 <element signature="e#2282#2293#0" expanded="true" />
               </folding>
@@ -86,11 +86,21 @@
       <file leaf-file-name="image_caption_train.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/main/image_caption_train.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="144">
-              <caret line="105" column="45" lean-forward="false" selection-start-line="105" selection-start-column="45" selection-end-line="105" selection-end-column="45" />
+            <state relative-caret-position="228">
+              <caret line="124" column="43" lean-forward="false" selection-start-line="124" selection-start-column="43" selection-end-line="124" selection-end-column="43" />
               <folding>
                 <element signature="e#0#23#0" expanded="true" />
               </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="pydevd_vars.py" pinned="false" current-in-tab="false">
+        <entry file="file://$APPLICATION_HOME_DIR$/helpers/pydev/_pydevd_bundle/pydevd_vars.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="126">
+              <caret line="353" column="0" lean-forward="false" selection-start-line="353" selection-start-column="0" selection-end-line="353" selection-end-column="0" />
+              <folding />
             </state>
           </provider>
         </entry>
@@ -131,9 +141,10 @@
       <find>start</find>
       <find>testMo</find>
       <find>kee</find>
-      <find>test</find>
       <find>getN</find>
       <find>get</find>
+      <find>testInput =</find>
+      <find>test</find>
     </findStrings>
     <replaceStrings>
       <replace>self</replace>
@@ -163,8 +174,8 @@
         <option value="/usr/local/lib/python3.5/dist-packages/tensorflow/python/ops/losses/losses_impl.py" />
         <option value="$PROJECT_DIR$/main/neuralNetworks/rnn/RNNUtils.py" />
         <option value="$PROJECT_DIR$/main/neuralNetworks/rnn/StackedRNN.py" />
-        <option value="$PROJECT_DIR$/main/image_caption_train.py" />
         <option value="$PROJECT_DIR$/data_utils/data_helper.py" />
+        <option value="$PROJECT_DIR$/main/image_caption_train.py" />
       </list>
     </option>
   </component>
@@ -525,7 +536,7 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="24" width="1366" height="744" extended-state="6" />
-    <editor active="true" />
+    <editor active="false" />
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.15075758" sideWeight="0.49140048" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32817337" sideWeight="0.4969697" order="6" side_tool="false" content_ui="tabs" />
@@ -535,7 +546,7 @@
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3271605" sideWeight="0.4969697" order="10" side_tool="false" content_ui="tabs" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.39660493" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.3271605" sideWeight="0.49707174" order="11" side_tool="false" content_ui="tabs" />
+      <window_info id="Terminal" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.3271605" sideWeight="0.49707174" order="11" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.25833333" sideWeight="0.5085995" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.36882716" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
@@ -575,7 +586,7 @@
           </properties>
         </breakpoint>
       </default-breakpoints>
-      <option name="time" value="128" />
+      <option name="time" value="133" />
     </breakpoint-manager>
     <watches-manager>
       <configuration name="PythonConfigurationType">
@@ -585,20 +596,14 @@
         <watch expression="batchLabel.shape" language="Python" />
         <watch expression="batchInput.shape" language="Python" />
         <watch expression="batchLabel[0:batchLabel.shape[1] - 1, batchCnt, :] = [batchLabelRaw[i + 1, :, batchCnt] for i in&#10;                                                      range(batchLabelRaw.shape[0] - 1)]" language="Python" />
+        <watch expression="out.shape" language="Python" />
+        <watch expression="X.shape" language="Python" />
+        <watch expression="testInput.shape" language="Python" />
+        <watch expression="self.X.shape" language="Python" />
       </configuration>
     </watches-manager>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/main/train.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="126">
-          <caret line="14" column="18" lean-forward="false" selection-start-line="14" selection-start-column="18" selection-end-line="14" selection-end-column="18" />
-          <folding>
-            <element signature="e#0#23#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file:///usr/local/lib/python3.5/dist-packages/inception/main.py" />
     <entry file="file://$PROJECT_DIR$/main/neuralNetworks/cnn/CNN.py">
       <provider selected="true" editor-type-id="text-editor">
@@ -877,20 +882,18 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/main/neuralNetworks/rnn/StackedRNN.py">
+    <entry file="file://$APPLICATION_HOME_DIR$/helpers/pydev/_pydevd_bundle/pydevd_vars.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-64">
-          <caret line="23" column="92" lean-forward="false" selection-start-line="23" selection-start-column="92" selection-end-line="23" selection-end-column="92" />
-          <folding>
-            <element signature="e#0#23#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="126">
+          <caret line="353" column="0" lean-forward="false" selection-start-line="353" selection-start-column="0" selection-end-line="353" selection-end-column="0" />
+          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/main/image_caption_train.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="144">
-          <caret line="105" column="45" lean-forward="false" selection-start-line="105" selection-start-column="45" selection-end-line="105" selection-end-column="45" />
+        <state relative-caret-position="228">
+          <caret line="124" column="43" lean-forward="false" selection-start-line="124" selection-start-column="43" selection-end-line="124" selection-end-column="43" />
           <folding>
             <element signature="e#0#23#0" expanded="true" />
           </folding>
@@ -899,10 +902,20 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/data_utils/data_helper.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="226">
-          <caret line="431" column="46" lean-forward="true" selection-start-line="431" selection-start-column="46" selection-end-line="431" selection-end-column="46" />
+        <state relative-caret-position="28">
+          <caret line="432" column="53" lean-forward="true" selection-start-line="432" selection-start-column="53" selection-end-line="432" selection-end-column="53" />
           <folding>
             <element signature="e#2282#2293#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/main/neuralNetworks/rnn/StackedRNN.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="270">
+          <caret line="90" column="20" lean-forward="false" selection-start-line="90" selection-start-column="20" selection-end-line="90" selection-end-column="20" />
+          <folding>
+            <element signature="e#0#23#0" expanded="true" />
           </folding>
         </state>
       </provider>
