@@ -141,12 +141,13 @@ def start():
             load_data_process.join()
             batchId += 1
 
+        endTime = time.time()
+        duration = (endTime - startTime) / statShowPeriod
+        print("batch ", i, ", train time per batch: ", duration, " current gained cost: ", costs[i])
+        startTime = endTime
+        print("drawing error curve...")
+
         if i % statShowPeriod == 0 and i > 0:
-            endTime = time.time()
-            duration = (endTime - startTime) / statShowPeriod
-            print("batch ", i, ", train time per batch: ", duration, " current gained cost: ", costs[i])
-            startTime = endTime
-            print("drawing error curve...")
             plt.plot([i - 1, i], costs[i - 1:i + 1])
             plt.show()
             plt.pause(1)
