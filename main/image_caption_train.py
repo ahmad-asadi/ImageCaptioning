@@ -96,17 +96,17 @@ def start():
     batchData = copy.copy(batch_data_buffer)
     batchImgFileName = list(batch_img_filename_buffer)
     batchLabelRaw = copy.copy(batch_label_buffer)
-    batchInput = np.zeros(shape=(batchData.shape[2], batchData.shape[0],
+    batchInput = np.zeros(shape=(batchData.shape[0], batchData.shape[2],
                                  batchData.shape[1] + imageFeaturesSize))
-    batchLabel = np.zeros(shape=(batchLabelRaw.shape[2], batchLabelRaw.shape[0], batchLabelRaw.shape[1]))
+    batchLabel = np.zeros(shape=(batchLabelRaw.shape[0], batchLabelRaw.shape[2], batchLabelRaw.shape[1]))
     for batchCnt in range(len(batchImgFileName)):
         imageFeatures = cnn.classify(os.path.join(data_dir, "train2014/" + batchImgFileName[batchCnt]))
 
         imageFeaturesMat = np.reshape(np.repeat(a=imageFeatures, repeats=rnnOptions.time_step).transpose(),
                                       (rnnOptions.image_feature_size, rnnOptions.time_step))
-        batchInput[batchCnt, :, :] = (np.concatenate((batchData[:, :, batchCnt].transpose(), imageFeaturesMat),
+        batchInput[:, batchCnt, :] = (np.concatenate((batchData[:, :, batchCnt].transpose(), imageFeaturesMat),
                                                      axis=0)).transpose()
-        batchLabel[batchCnt, 0:batchLabel.shape[1] - 1, :] = [batchLabelRaw[i + 1, :, batchCnt] for i in
+        batchLabel[0:batchLabel.shape[0] - 1, batchCnt, :] = [batchLabelRaw[i + 1, :, batchCnt] for i in
                                                               range(batchLabelRaw.shape[0] - 1)]
     testInput = batchInput[:, 0, :]
     print("test image name: ", batchImgFileName[0])
@@ -162,30 +162,18 @@ def start():
 def prepare_data_and_train_structure(batchData, i, batchImgFileName, cnn, data_dir, imageFeaturesSize, rnn,
                                      rnnOptions, batchLabelRaw):
     global costs
-    batchInput = np.zeros(shape=(batchData.shape[2], batchData.shape[0],
+    batchInput = np.zeros(shape=(batchData.shape[0], batchData.shape[2],
                                  batchData.shape[1] + imageFeaturesSize))
-    batchLabel = np.zeros(shape=(batchLabelRaw.shape[2], batchLabelRaw.shape[0], batchLabelRaw.shape[1]))
+    batchLabel = np.zeros(shape=(batchLabelRaw.shape[0], batchLabelRaw.shape[2], batchLabelRaw.shape[1]))
     for batchCnt in range(len(batchImgFileName)):
         imageFeatures = cnn.classify(os.path.join(data_dir, "train2014/" + batchImgFileName[batchCnt]))
 
         imageFeaturesMat = np.reshape(np.repeat(a=imageFeatures, repeats=rnnOptions.time_step).transpose(),
                                       (rnnOptions.image_feature_size, rnnOptions.time_step))
-        batchInput[batchCnt, :, :] = (np.concatenate((batchData[:, :, batchCnt].transpose(), imageFeaturesMat),
+        batchInput[:, batchCnt, :] = (np.concatenate((batchData[:, :, batchCnt].transpose(), imageFeaturesMat),
                                                      axis=0)).transpose()
-        batchLabel[batchCnt, 0:batchLabel.shape[1] - 1, :] = [batchLabelRaw[i + 1, :, batchCnt] for i in
+        batchLabel[0:batchLabel.shape[0] - 1, batchCnt, :] = [batchLabelRaw[i + 1, :, batchCnt] for i in
                                                               range(batchLabelRaw.shape[0] - 1)]
-    # batchInput = np.zeros(shape=(batchData.shape[0], batchData.shape[2],
-    #                              batchData.shape[1] + imageFeaturesSize))
-    # batchLabel = np.zeros(shape=(batchLabelRaw.shape[0], batchLabelRaw.shape[2], batchLabelRaw.shape[1]))
-    # for batchCnt in range(len(batchImgFileName)):
-    #     imageFeatures = cnn.classify(os.path.join(data_dir, "train2014/" + batchImgFileName[batchCnt]))
-    #
-    #     imageFeaturesMat = np.reshape(np.repeat(a=imageFeatures, repeats=rnnOptions.time_step).transpose(),
-    #                                   (rnnOptions.image_feature_size, rnnOptions.time_step))
-    #     batchInput[:, batchCnt, :] = (np.concatenate((batchData[:, :, batchCnt].transpose(), imageFeaturesMat),
-    #                                                  axis=0)).transpose()
-    #     batchLabel[0:batchLabel.shape[0] - 1, batchCnt, :] = [batchLabelRaw[i + 1, :, batchCnt] for i in
-    #                                                           range(batchLabelRaw.shape[0] - 1)]
 
     costs[i] = rnn.train_batch(Xbatch=batchInput, Ybatch=batchLabel, keep_prob=0.9)
 
