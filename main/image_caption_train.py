@@ -56,6 +56,9 @@ def getNextInstance(iteration, data, cocoHelper, rnnUtils, vocab, word2ind):
                       range(len(dataInsts))]
     inst_image_filenames = [inst_image["file_name"] for _ in range(len(dataInsts))]
 
+    if testLabel is None:
+        testLabel = dataInsts
+
     return embeddedCaptions, inst_image_filenames, embeddedLabels
 
 
