@@ -30,8 +30,11 @@ class StackedRNN:
                     self.keep_prob = tf.placeholder(dtype=tf.float32)
 
                 with tf.name_scope(name="RNN_Core"):
-                    self.lstm_cells = [tf.nn.rnn_cell.BasicLSTMCell(self.lstm_size, forget_bias=1.0,
-                                                                    state_is_tuple=True)
+                    # self.lstm_cells = [tf.nn.rnn_cell.BasicLSTMCell(self.lstm_size, forget_bias=1.0,
+                    #                                                 state_is_tuple=True)
+                    #                    for _
+                    #                    in range(self.number_of_layers)]
+                    self.lstm_cells = [tf.nn.rnn_cell.GRUCell(num_units=self.lstm_size)
                                        for _
                                        in range(self.number_of_layers)]
 
