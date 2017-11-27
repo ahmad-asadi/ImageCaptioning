@@ -176,7 +176,7 @@ def prepare_data_and_train_structure(batchData, i, batchImgFileName, cnn, data_d
         batchLabel[0:batchLabel.shape[0] - 1, batchCnt, :] = [batchLabelRaw[i + 1, :, batchCnt] for i in
                                                               range(batchLabelRaw.shape[0] - 1)]
 
-    costs[i] = rnn.train_batch(Xbatch=batchInput, Ybatch=batchLabel, keep_prob=0.9)
+    costs[i] = rnn.train_batch(Xbatch=batchInput, Ybatch=batchLabel, keep_prob=0.7)
 
 
 def train_structure(batchInput, batchLabel, rnn):
