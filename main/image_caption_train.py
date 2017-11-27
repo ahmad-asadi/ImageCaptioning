@@ -122,7 +122,7 @@ def start():
     batchId = 0
     for i in range(maxIterCount):
         loop_counter = math.ceil((len(rawCaptions) / 5) / rnnOptions.batch_size)
-        loop_counter = min(loop_counter, 10)
+        loop_counter = min(loop_counter, 20)
         for internal_loop_counter in range(loop_counter):
             print("iteration:" + repr(i) + ", internal loop: processing ",
                   100 * internal_loop_counter / loop_counter,
