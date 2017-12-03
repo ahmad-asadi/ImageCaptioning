@@ -81,10 +81,12 @@ class RNNOptions:
         self.input_size = self.word_embedding_size + self.image_feature_size
         self.out_size = len(vocab)
         self.lstm_size = 512
-        self.batch_size = math.ceil(64/5)
-        self.time_step = 25
+        self.batch_size = math.ceil(64/5)*5
+        self.batch_insts = math.floor(self.batch_size/5)
+        self.time_step = 10
         # self.learning_rate = 0.003
-        self.learning_rate = 0.001
+        # self.learning_rate = 0.001
+        self.learning_rate = 0.01
         # self.learning_rate = 0.1  # appropriate for MSE loss function
         self.saved_model_path = "./image_caption_encoder_saved/model.ckpt"
         self.name = "Decoder"

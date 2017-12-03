@@ -30,6 +30,10 @@ class StackedRNN:
                     self.keep_prob = tf.placeholder(dtype=tf.float32)
 
                 with tf.name_scope(name="RNN_Core"):
+                    # self.lstm_cells = [tf.nn.rnn_cell.LSTMCell(self.lstm_size, forget_bias=1.0,
+                    #                                            state_is_tuple=True, initializer=tf.zeros_initializer)
+                    #                    for _
+                    #                    in range(self.number_of_layers)]
                     self.lstm_cells = [tf.nn.rnn_cell.BasicLSTMCell(self.lstm_size, forget_bias=1.0,
                                                                     state_is_tuple=True)
                                        for _
@@ -38,16 +42,18 @@ class StackedRNN:
                     #                    for _
                     #                    in range(self.number_of_layers)]
                     #
-                    self.lstm_init_states = [self.lstm_cells[i].zero_state(batch_size=self.batch_size, dtype=tf.float32)
-                                             for i in range(len(self.lstm_cells))]
+                    # self.lstm_init_states = [rnn_cell.zero_state(batch_size=self.batch_size, dtype=tf.float32)
+                    #                          for rnn_cell in self.lstm_cells]
 
                     self.lstm_cells = [tf.nn.rnn_cell.DropoutWrapper(self.lstm_cells[i],
                                                                      output_keep_prob=self.keep_prob)
                                        for i in range(self.number_of_layers)]
                     self.lstm = tf.nn.rnn_cell.MultiRNNCell(self.lstm_cells, state_is_tuple=True)
                     self.lstm = tf.nn.rnn_cell.DropoutWrapper(self.lstm, output_keep_prob=self.keep_prob)
+                    self.lstm_init_states = self.lstm.zero_state(batch_size=self.batch_size, dtype=tf.float32)
                     self.outputs, self.lstm_current_state = tf.nn.dynamic_rnn(cell=self.lstm, inputs=self.X,
-                                                                              dtype=tf.float32, time_major=True)
+                                                                              dtype=tf.float32, time_major=True,
+                                                                              initial_state=self.lstm_init_states)
 
                 with tf.variable_scope(name_or_scope="Output"):
                     self.OUT_W = tf.Variable(initial_value=tf.random_normal(shape=(self.lstm_size, self.output_size),

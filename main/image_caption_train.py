@@ -1,6 +1,6 @@
 import tensorflow as tf
 import numpy as np
-
+import nltk
 import os
 import time
 import resource
@@ -19,9 +19,9 @@ from multiprocessing import Process
 
 def getNextBatch(batchId, rawCaptions, cocoHelper, rnnOptions, vocab, word2ind):
     # training.batch_sequences_with_states()
-    batchInstanceCount = min(rnnOptions.batch_size, len(rawCaptions))
-    batchData = np.zeros(shape=(rnnOptions.time_step, cocoHelper.word2vec.layer1_size, rnnOptions.batch_size*5))
-    batchLabel = np.zeros(shape=(rnnOptions.time_step, len(vocab), rnnOptions.batch_size*5))
+    batchInstanceCount = min(rnnOptions.batch_insts, len(rawCaptions))
+    batchData = np.zeros(shape=(rnnOptions.time_step, cocoHelper.word2vec.layer1_size, rnnOptions.batch_size))
+    batchLabel = np.zeros(shape=(rnnOptions.time_step, len(vocab), rnnOptions.batch_size))
     batchImgs = []
     for i in range(batchInstanceCount - 1):
         embeddedCaptionInsts, instImgFileNames, embeddedLabels = getNextInstance(i + batchId, rawCaptions, cocoHelper,
@@ -108,8 +108,9 @@ def start():
                                                      axis=0)).transpose()
         batchLabel[0:batchLabel.shape[0] - 1, batchCnt, :] = [batchLabelRaw[i + 1, :, batchCnt] for i in
                                                               range(batchLabelRaw.shape[0] - 1)]
-    testInput = np.zeros(shape=(batchInput.shape[0], 1, batchInput.shape[2]))
-    testInput[:, 0, :] = batchInput[:, 0, :]
+    # testInput = np.zeros(shape=(batchInput.shape[0], 1, batchInput.shape[2]))
+    # testInput[:, 0, :] = batchInput[:, 0, :]
+    testInput = batchInput
     print("test image name: ", batchImgFileName[0])
 
     print("starting to train the structure")
@@ -122,7 +123,7 @@ def start():
     batchId = 0
     for i in range(maxIterCount):
         loop_counter = math.ceil((len(rawCaptions) / 5) / rnnOptions.batch_size)
-        loop_counter = min(loop_counter, 20)
+        loop_counter = min(loop_counter, 5)
         for internal_loop_counter in range(loop_counter):
             print("iteration:" + repr(i) + ", internal loop: processing ",
                   100 * internal_loop_counter / loop_counter,
@@ -176,7 +177,7 @@ def prepare_data_and_train_structure(batchData, i, batchImgFileName, cnn, data_d
         batchLabel[0:batchLabel.shape[0] - 1, batchCnt, :] = [batchLabelRaw[i + 1, :, batchCnt] for i in
                                                               range(batchLabelRaw.shape[0] - 1)]
 
-    costs[i] = rnn.train_batch(Xbatch=batchInput, Ybatch=batchLabel, keep_prob=0.7)
+    costs[i] = rnn.train_batch(Xbatch=batchInput, Ybatch=batchLabel, keep_prob=0.5)
 
 
 def train_structure(batchInput, batchLabel, rnn):
@@ -212,6 +213,10 @@ def testModel(rnn, rnnOptions, testInput, cocoHelper, ind2word):
         out = out[0]
     print(gen_str)
     print("Human label: ", testLabel)
+    BLEUScores = nltk.translate.bleu_score.sentence_bleu([ref["caption"] for ref in testLabel], gen_str,
+                                                         emulate_multibleu=True)
+
+    print("BLEU SCORE: ", BLEUScores)
 
 
 def printGraph(rnnOptions):
