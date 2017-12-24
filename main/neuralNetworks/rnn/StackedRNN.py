@@ -4,8 +4,11 @@ import numpy as np
 
 class StackedRNN:
     def __init__(self, input_size, lstm_size, number_of_layers, output_size, session, learning_rate, batch_size,
-                 name="rnn"):
+                 attn_length=0, attn_size=0, name="rnn", cnn_graph=None):
         self.scope = name
+        self.cnn_graph = cnn_graph
+        self.attn_length = attn_length
+        self.attn_size = attn_size
         self.input_size = input_size
         self.batch_size = batch_size
         print("input size:", input_size)
@@ -38,6 +41,11 @@ class StackedRNN:
                                                                     state_is_tuple=True)
                                        for _
                                        in range(self.number_of_layers)]
+                    # self.lstm_cells = [tf.contrib.rnn.AttentionCellWrapper(cell=lstm_cell,
+                    #                                                        attn_length=self.attn_length,
+                    #                                                        state_is_tuple=True)
+                    #                    for lstm_cell
+                    #                    in self.lstm_cells]
                     # self.lstm_cells = [tf.nn.rnn_cell.GRUCell(num_units=self.lstm_size)
                     #                    for _
                     #                    in range(self.number_of_layers)]
@@ -45,12 +53,12 @@ class StackedRNN:
                     # self.lstm_init_states = [rnn_cell.zero_state(batch_size=self.batch_size, dtype=tf.float32)
                     #                          for rnn_cell in self.lstm_cells]
 
-                    self.lstm_cells = [tf.nn.rnn_cell.DropoutWrapper(self.lstm_cells[i],
+                    self.lstm_cells = [tf.nn.rnn_cell.DropoutWrapper(lstm_cell,
                                                                      output_keep_prob=self.keep_prob)
-                                       for i in range(self.number_of_layers)]
+                                       for lstm_cell in self.lstm_cells]
                     self.lstm = tf.nn.rnn_cell.MultiRNNCell(self.lstm_cells, state_is_tuple=True)
                     self.lstm = tf.nn.rnn_cell.DropoutWrapper(self.lstm, output_keep_prob=self.keep_prob)
-                    self.lstm_init_states = self.lstm.zero_state(batch_size=self.batch_size, dtype=tf.float32)
+                    self.lstm_init_states = self.lstm.zero_state(batch_size=tf.shape(self.X)[1], dtype=tf.float32)
                     self.outputs, self.lstm_current_state = tf.nn.dynamic_rnn(cell=self.lstm, inputs=self.X,
                                                                               dtype=tf.float32, time_major=True,
                                                                               initial_state=self.lstm_init_states)
@@ -67,7 +75,8 @@ class StackedRNN:
                                                              variance_epsilon=1e-10)
 
                     self.batch_time_shape = tf.shape(self.outputs)
-                    self.softmax_net_out = tf.nn.softmax(logits=self.net_out)
+                    # self.softmax_net_out = tf.nn.softmax(logits=self.net_out)
+                    self.softmax_net_out = self.net_out
                     self.final_output = tf.reshape(self.softmax_net_out, shape=(self.batch_time_shape[0],
                                                                                 self.batch_time_shape[1],
                                                                                 self.output_size))
@@ -77,13 +86,18 @@ class StackedRNN:
 
                     self.Y_long = tf.reshape(tensor=self.Y, shape=(-1, self.output_size))
 
-                    self.cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=self.softmax_net_out,
-                                                                                       labels=self.Y_long))
+                    # self.cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=self.net_out,
+                    #                                                                    labels=self.Y_long))
                     # self.cost = tf.reduce_sum(tf.losses.mean_squared_error(predictions=self.softmax_net_out,
                     #                                                        labels=self.Y_long))
+                    self.cost = tf.reduce_sum(tf.losses.absolute_difference(predictions=self.softmax_net_out,
+                                                                           labels=self.Y_long))
 
                     # self.train_op = tf.train.RMSPropOptimizer(self.learning_rate, decay=0.9).minimize(self.cost)
                     self.train_op = tf.train.AdamOptimizer(learning_rate=self.learning_rate).minimize(self.cost)
+                    # self.train_op = tf.train.AdadeltaOptimizer(learning_rate=self.learning_rate).minimize(self.cost)
+                    # self.train_op = tf.train.GradientDescentOptimizer(learning_rate=self.learning_rate).minimize(
+                    #     self.cost)
         self.print_number_of_parameters()
 
     def run_step(self, X, init_zero_state=True, keep_prob=1):

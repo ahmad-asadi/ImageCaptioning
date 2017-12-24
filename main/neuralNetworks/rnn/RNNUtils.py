@@ -33,7 +33,7 @@ class RNNUtils:
     def embed_inst_label_to_vocab(dataInst, vocab, word2ind):
         current_caption_words = re.split("[\W]+", dataInst['caption'])
         data = np.zeros(shape=(len(current_caption_words), len(vocab)))
-        cnt = 0
+        cnt = 10
         for s in current_caption_words:
             v = [0.0] * len(vocab)
             v[word2ind[s.lower()]] = 1.0
@@ -79,14 +79,15 @@ class RNNOptions:
         self.num_layers = 2
         self.word_embedding_size = word_embedding_size
         self.input_size = self.word_embedding_size + self.image_feature_size
-        self.out_size = len(vocab)
+        # self.out_size = len(vocab)
+        self.out_size = word_embedding_size
         self.lstm_size = 512
         self.batch_size = math.ceil(64/5)*5
         self.batch_insts = math.floor(self.batch_size/5)
         self.time_step = 10
         # self.learning_rate = 0.003
         # self.learning_rate = 0.001
-        self.learning_rate = 0.01
+        self.learning_rate = 0.001
         # self.learning_rate = 0.1  # appropriate for MSE loss function
         self.saved_model_path = "./image_caption_encoder_saved/model.ckpt"
         self.name = "Decoder"

@@ -439,8 +439,17 @@ class COCOHelper:
     def create_word2vec(self):
         print("creating word embeddings structure")
         sentences = [re.split("[\W]+", (self.anns[i]["caption"]).lower()) for i in self.anns]
-        iteration_count = 10
-        self.word2vec = Word2Vec(iter=iteration_count, min_count=0, size=1000, workers=8)
+        iteration_count = 100
+        self.word2vec = Word2Vec(iter=iteration_count, min_count=0, size=512, workers=8)
         self.word2vec_vocab = self.word2vec.build_vocab(sentences=sentences)
         print("training word embeddings")
-        self.word2vec.train(sentences=sentences, total_examples=len(sentences), epochs=iteration_count)
+        loss_value = 1000000
+        i = 0
+        while loss_value >= 540000 and i < iteration_count:
+            self.word2vec.train(sentences=sentences, total_examples=len(sentences), epochs=1,
+                                compute_loss=True)
+            loss_value = self.word2vec.get_latest_training_loss()
+            print("iteration:", i, ", loss value:", loss_value)
+            i += 1
+
+        print("reached to an acceptable performance")
